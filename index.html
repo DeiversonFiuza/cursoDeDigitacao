@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Lição de Digitação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: left;
+            margin: 20px;
+            background: #121212;
+            color: #fff;
+        }
+        #lesson-text {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #00c3ff;
+        }
+        .line-container {
+            font-size: 100px;
+            font-weight: bold;
+            background: #333;
+            padding: 30px;
+            border-radius: 10px;
+            display: inline-block;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            width: auto;
+            text-align: left;
+            white-space: nowrap;
+            letter-spacing: 10px;
+        }
+        #input-area {
+            font-size: 100px;
+            font-weight: bold;
+            background: #222;
+            padding: 30px;
+            border-radius: 10px;
+            color: #fff;
+            border: 4px solid #00c3ff;
+            margin-top: 20px;
+            width: 100%;
+            text-align: left;
+            white-space: nowrap;
+            letter-spacing: 10px;
+            display: block;
+        }
+        .correct {
+            color: #8aff8a;
+        }
+        .incorrect {
+            color: #ff5555;
+        }
+        #score {
+            font-size: 40px;
+            margin-top: 20px;
+        }
+        #error-box {
+            font-size: 40px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #ff5555;
+            color: #fff;
+            border-radius: 10px;
+            display: none;
+        }
+        #result {
+            margin-top: 40px;
+            font-size: 48px;
+            font-weight: bold;
+        }
+        #retry-btn {
+            display: none;
+            margin-top: 40px;
+            padding: 20px 40px;
+            font-size: 36px;
+            background-color: #ff8a8a;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        #retry-btn:hover {
+            background-color: #ff5555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lição de Digitação</h1>
+    <div id="lesson-text">Digite as sequências abaixo:</div>
+    <div id="lines"></div>
+    <input type="text" id="input-area" oninput="checkInput()" maxlength="25" autofocus>
+    <div id="error-box"></div>
+    <div id="score">Acertos: 0 | Erros: 0</div>
+    <div id="result"></div>
+    <button id="retry-btn" onclick="restartLesson()">Tentar Novamente</button>
+
+    <script>
+        const baseLine = "ASDF ASDF ASDF ASDF ASDF";
+        const lines = Array(5).fill(baseLine);
+        let currentLineIndex = 0;
+        let correctEntries = 0;
+        let incorrectEntries = 0;
+        const inputArea = document.getElementById('input-area');
+        const linesContainer = document.getElementById('lines');
+        const errorBox = document.getElementById('error-box');
+        const resultElement = document.getElementById('result');
+        const scoreElement = document.getElementById('score');
+        const retryButton = document.getElementById('retry-btn');
+        
+        function displayCurrentLine() {
+            linesContainer.innerHTML = '';
+            let lineDiv = document.createElement("div");
+            lineDiv.classList.add("line-container");
+            lineDiv.innerHTML = highlightText(lines[currentLineIndex], "");
+            linesContainer.appendChild(lineDiv);
+            errorBox.style.display = "none";
+        }
+
+        function highlightText(correctText, userInput) {
+            let styledText = '';
+            for (let i = 0; i < correctText.length; i++) {
+                if (userInput[i] === correctText[i]) {
+                    styledText += `<span class='correct'>${correctText[i]}</span>`;
+                } else if (userInput[i]) {
+                    styledText += `<span class='incorrect'>${correctText[i]}</span>`;
+                } else {
+                    styledText += `<span>${correctText[i]}</span>`;
+                }
+            }
+            return styledText;
+        }
+
+        function checkInput() {
+            let input = inputArea.value.toUpperCase();
+            linesContainer.children[0].innerHTML = highlightText(lines[currentLineIndex], input);
+            
+            let errors = 0;
+            let corrects = 0;
+            for (let i = 0; i < input.length; i++) {
+                if (input[i] !== lines[currentLineIndex][i]) {
+                    errors++;
+                } else {
+                    corrects++;
+                }
+            }
+            incorrectEntries += errors;
+            correctEntries += corrects;
+            
+            if (errors > 0) {
+                errorBox.textContent = `Letra correta: ${lines[currentLineIndex][input.length] || ''}`;
+                errorBox.style.display = "block";
+            } else {
+                errorBox.style.display = "none";
+            }
+            
+            updateScore();
+            
+            if (input.length === lines[currentLineIndex].length) {
+                nextLine();
+            }
+        }
+
+        function updateScore() {
+            scoreElement.textContent = `Acertos: ${correctEntries} | Erros: ${incorrectEntries}`;
+        }
+
+        function nextLine() {
+            if (currentLineIndex < lines.length - 1) {
+                currentLineIndex++;
+                inputArea.value = "";
+                displayCurrentLine();
+            } else {
+                finishLesson();
+            }
+        }
+
+        function finishLesson() {
+            inputArea.disabled = true;
+            const accuracy = (correctEntries / (correctEntries + incorrectEntries)) * 100;
+            if (accuracy >= 80) {
+                resultElement.textContent = "Você foi aprovado!";
+                resultElement.style.color = "#8aff8a";
+            } else {
+                resultElement.textContent = "Tente novamente.";
+                resultElement.style.color = "#ff8a8a";
+                retryButton.style.display = "block";
+            }
+        }
+
+        function restartLesson() {
+            currentLineIndex = 0;
+            correctEntries = 0;
+            incorrectEntries = 0;
+            inputArea.value = "";
+            inputArea.disabled = false;
+            updateScore();
+            resultElement.textContent = "";
+            retryButton.style.display = "none";
+            displayCurrentLine();
+        }
+
+        displayCurrentLine();
+    </script>
+</body>
+</html>
