@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lição de Digitação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: #121212;
+            color: #fff;
+            width: 1024px;
+            height: 768px;
+            overflow: hidden;
+        }
+
+        #lesson-text {
+            font-size: 36px;
+            margin: 10px 0;
+            color: #00c3ff;
+        }
+
+        .line-container {
+            font-size: 40px;
+            font-weight: bold;
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-block;
+            color: #ffcc00;
+            margin-bottom: 10px;
+            width: 90%;
+            white-space: nowrap;
+            letter-spacing: 8px;
+        }
+
+        #input-area {
+            font-size: 40px;
+            font-weight: bold;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            color: #fff;
+            border: 3px solid #00c3ff;
+            width: 90%;
+            white-space: nowrap;
+            letter-spacing: 8px;
+        }
+
+        #result, #performance {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #333;
+            border-radius: 10px;
+            display: none;
+            border: 2px solid #00c3ff;
+        }
+
+        #next-btn, #retry-btn {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #00c3ff;
+            color: #121212;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        #next-btn:hover, #retry-btn:hover {
+            background-color: #009dcf;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Lição de Digitação</h1>
+    <div id="lesson-text">Lição 01 - AIFDF (mínimo: 100 TPM, 90% de acerto, 150 toques)</div>
+    <div id="lines"></div>
+    <input type="text" id="input-area" oninput="checkInput()" maxlength="35" autofocus autocomplete="off">
+
+    <div id="result"></div>
+    <div id="performance"></div>
+
+    <button id="next-btn">Próxima lição</button>
+    <button id="retry-btn" onclick="restartLesson()">Praticar mais</button>
+
+    <script>
+        const baseLine = "AIFDF AIFDF AIFDF AIFDF AIFDF AIFDF";
+        const lines = Array(5).fill(baseLine);
+        let currentLineIndex = 0;
+        let incorrectCharacterCount = 0;
+        let totalCorrectCharacterCount = 0;
+        let totalCharacterCount = 0;
+        let errorFlags = Array(baseLine.length).fill(false);
+        let startTime;
+
+        const inputArea = document.getElementById('input-area');
+        const linesContainer = document.getElementById('lines');
+        const resultElement = document.getElementById('result');
+        const performanceElement = document.getElementById('performance');
+        const nextButton = document.getElementById('next-btn');
+        const retryButton = document.getElementById('retry-btn');
+
+        function displayCurrentLine() {
+            linesContainer.innerHTML = '';
+            let lineDiv = document.createElement("div");
+            lineDiv.classList.add("line-container");
+            lineDiv.innerHTML = lines[currentLineIndex];
+            linesContainer.appendChild(lineDiv);
+            errorFlags = Array(baseLine.length).fill(false);
+            if (currentLineIndex === 0) startTime = new Date();
+        }
+
+        function checkInput() {
+            let input = inputArea.value.toUpperCase();
+            let correctText = lines[currentLineIndex];
+            let correctInThisLine = 0;
+
+            for (let i = 0; i < correctText.length; i++) {
+                if (input[i] === correctText[i]) correctInThisLine++;
+                else if (input[i] && !errorFlags[i]) {
+                    incorrectCharacterCount++;
+                    errorFlags[i] = true;
+                }
+            }
+
+            if (input.length === correctText.length) {
+                totalCorrectCharacterCount += correctInThisLine;
+                totalCharacterCount += input.length;
+                nextLine();
+            }
+        }
+
+        function nextLine() {
+            if (currentLineIndex < lines.length - 1) {
+                currentLineIndex++;
+                inputArea.value = "";
+                displayCurrentLine();
+            } else {
+                finishLesson();
+            }
+        }
+
+        function finishLesson() {
+            inputArea.disabled = true;
+            let endTime = new Date();
+            let totalTime = (endTime - startTime) / 60000; // minutos
+            let speed = Math.round(totalCharacterCount / totalTime);
+            let accuracy = Math.round((totalCorrectCharacterCount / totalCharacterCount) * 100);
+            
+            resultElement.innerHTML = `Lição: 01-AIFDF | Meta: 100 TPM, 90% acerto, 150 toques`;
+            performanceElement.innerHTML = `Sua velocidade: ${speed} TPM | Acertos: ${accuracy}% | Tempo: ${totalTime.toFixed(2)} min`;
+            resultElement.style.display = "block";
+            performanceElement.style.display = "block";
+
+            if (speed >= 100 && accuracy >= 90 && totalCharacterCount >= 150) {
+                resultElement.innerHTML += "<br>🎉 Parabéns, você completou essa lição com sucesso!";
+                nextButton.style.display = "inline-block";
+            } else {
+                resultElement.innerHTML += "<br>⚠️ Você ainda precisa melhorar mais. Tente novamente.";
+                retryButton.style.display = "inline-block";
+            }
+        }
+
+        function restartLesson() {
+            location.reload();
+        }
+
+        displayCurrentLine();
+    </script>
+</body>
+
+</html>
